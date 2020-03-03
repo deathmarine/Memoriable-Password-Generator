@@ -11,11 +11,15 @@ using System.Windows.Forms;
 
 namespace DictionaryBasedPasswords {
     public partial class Form1 : Form {
+        Timer t1 = new Timer();
         Random gen = new Random();
+
         string[] dictionary = { };
         string[] common = { };
         string[] common_alt = { };
         string[] swear_words = { };
+
+        int label6_opacity = 0;
         public Form1() {
             InitializeComponent();
             dictionary = Properties.Resources.words_alpha.Split('\n');
@@ -68,6 +72,10 @@ namespace DictionaryBasedPasswords {
                     }
                     word = build;
                 }
+                if (checkBox4.Checked) {
+                    brutechar *= 2;
+                    word = word.ToUpper();
+                }
 
 
                 brutesum += Math.Pow(brutechar, (double) word.Length);
@@ -76,8 +84,14 @@ namespace DictionaryBasedPasswords {
                     password += textBox2.Text;
                 }
             }
+            password = password.Replace("\r", string.Empty).Replace("\n", string.Empty);
             textBox1.Text = password;
+
             Clipboard.SetText(password);
+            label6.Text = "Copied to Clipboard!";
+
+            label6_opacity = 0;
+            label6.ForeColor = Color.FromArgb(label6_opacity, Color.Black);
             toolStripStatusLabel1.Text = $"{ThousandPassToYears(Math.Pow(brutesum, word_count))}/~Years Bruteforce";
 
 
@@ -104,7 +118,52 @@ namespace DictionaryBasedPasswords {
             comboBox1.Items.Add("Only Cursewords");
         }
 
-        private void comboBox1_SelectedIndexChanged(object sender, EventArgs e) {
+        private void label6_TextChanged(object sender, EventArgs e) {
+            t1 = new Timer();
+            t1.Interval = 1;
+            t1.Tick += new EventHandler(label6_FadeOut);
+            t1.Start();
         }
+
+        private void label6_FadeOut(object sender, EventArgs e) {
+            int r = label6.ForeColor.R, g = label6.ForeColor.G, b = label6.ForeColor.B;
+            if (r < this.BackColor.R) r++;
+            if (g < this.BackColor.G) g++;
+            if (b < this.BackColor.B) b++;
+            label6.ForeColor = Color.FromArgb(255, r, g, b);
+            label6.Update();
+            label6.Show();
+            if (r == this.BackColor.R && g == this.BackColor.G && b == this.BackColor.B) {
+                label6.Text = "";
+                t1.Stop();
+                t1.Dispose();
+            }
+        }
+
+        private void checkBox2_CheckedChanged(object sender, EventArgs e) {
+            if (textBox1.Text.Length < 1)
+                return;
+            if (checkBox2.Checked) {
+                string password = "";
+                string[] words = textBox1.Text.Split(textBox2.Text.ToCharArray()[0]);
+                for (int i = 0; i < words.Length; i++) {
+                    password += words[i].Substring(0, 1).ToUpper() + words[i].Substring(1);
+                    if (i != words.Length - 1) {
+                        password += textBox2.Text;
+                    }
+                }
+                textBox1.Text = password;
+            } else {
+                textBox1.Text = textBox1.Text.ToLower();
+            }
+        }
+
+        private void checkBox4_CheckedChanged(object sender, EventArgs e) {
+            if (checkBox4.Checked) {
+                textBox1.Text = textBox1.Text.ToUpper();
+            } else {
+                textBox1.Text = textBox1.Text.ToLower();
+            }
+}
     }
 }
